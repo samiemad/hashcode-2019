@@ -1,52 +1,135 @@
 #include <bits/stdc++.h>
+#include <sstream>
 using namespace std;
-typedef long long ll;
-typedef pair<ll,ll> pll;
-typedef vector<ll> vll;
-ll R; 			// Number of rows
-ll C; 			// Number of columns
-ll D; 			// Number of drones
-ll T; 			// Max time allowed
-ll W; 			// Max payload of a drone
-ll P; 			// Number of Products
-ll w[100]; 		// Weight of product i
+int N;
+pair<int, vector<string>> arr[100001];
+char typ;
+string tag;
+int num;
 
-ll H;			// Number of warehouses
-pll h[100];		// Location of each warehouses
-ll hp[100][100];// Count of product j in warehouse i
+//////
 
-ll O;			// Number of Orders
-pll o[100];		// Location of each order
-vll op[100];	// products for each order
+int solN;
+vector<int> solOrder[100001];
 
-int main(int argc, char** argv){
-	cin>>R>>C>>D>>T>>W>>P;
-	for(int i=0; i<P; ++i){
-		cin>>w[i];
+/////
+vector<string> solTags[100001];
+
+vector<string> mergeTags(vector<string> a, vector<string> b)
+{
+	map<string, bool> exist;
+	vector<string> res;
+	for (int i = 0; i < a.size(); i++)
+	{
+		if (!exist[a[i]])
+			res.push_back(a[i]);
+		exist[a[i]] = true;
 	}
-	cin>>H;
-	for(int i=0; i<H; ++i){
-		ll x, y;
-		cin>>x>>y;
-		h[i] = pll(x,y);
-		for(int j=0; j<P; ++j){
-			cin>>hp[i][j];
+
+	for (int i = 0; i < b.size(); i++)
+	{
+		if (!exist[b[i]])
+			res.push_back(b[i]);
+		exist[b[i]] = true;
+	}
+	return res;
+}
+
+vector<string> intersect(vector<string> a, vector<string> b)
+{
+	map<string, bool> exist;
+	vector<string> res;
+	for (int i = 0; i < a.size(); i++)
+	{
+		exist[a[i]] = true;
+	}
+
+	for (int i = 0; i < b.size(); i++)
+	{
+		if (exist[b[i]])
+			res.push_back(b[i]);
+	}
+	return res;
+}
+
+vector<string> diff(vector<string> a, vector<string> b)
+{
+	map<string, bool> exist;
+	vector<string> res;
+	for (int i = 0; i < a.size(); i++)
+	{
+		exist[a[i]] = true;
+	}
+
+	for (int i = 0; i < b.size(); i++)
+	{
+		if (!exist[b[i]])
+			res.push_back(b[i]);
+	}
+	return res;
+}
+
+vector<string> getTags(int x)
+{
+	if (solOrder[x].size() == 1)
+	{
+		return arr[solOrder[x][0]].second;
+	}
+	return mergeTags(arr[solOrder[x][0]].second, arr[solOrder[x][1]].second);
+}
+
+int main(int argc, char **argv)
+{
+	cin >> N;
+	for (int i = 0; i < N; i++)
+	{
+		cin >> typ >> num;
+		arr[i].first = typ;
+		for (int j = 0; j < num; j++)
+		{
+			cin >> tag;
+			arr[i].second.push_back(tag);
 		}
 	}
-	cin>>O;
-	for(int i=0; i<O; ++i){
-		ll x, y;
-		cin>>x>>y;
-		o[i] = pll(x,y);
-		int sz;
-		cin>> sz;
-		op[i] = vll(sz);
-		for(int j=0; j<sz; ++j){
-			cin>>x;
-			op[i][j] = x;
+
+	ifstream sin = ifstream(argv[1]);
+
+	sin >> solN;
+	string s;
+	stringstream linestream;
+	int a, b;
+	long long solution = 0;
+	getline(sin, s);
+	for (int i = 0; i < solN; ++i)
+	{
+		getline(sin, s);
+		// cout << s << endl;
+
+		bool t = false;
+		for (int j = 0; j < s.size(); j++)
+		{
+			t |= (s[j] == ' ');
+		}
+		stringstream ss(s);
+		ss >> a;
+		solOrder[i].push_back(a);
+		if (t)
+		{
+			ss >> b;
+			solOrder[i].push_back(b);
+		}
+
+		solTags[i] = getTags(i);
+
+		if (i != 0)
+		{
+			int r, y, u;
+			r = intersect(solTags[i], solTags[i - 1]).size();
+			y = diff(solTags[i], solTags[i - 1]).size();
+			u = diff(solTags[i - 1], solTags[i]).size();
+			solution += min(r, min(y, u));
 		}
 	}
-
-	cout<<"0";
+	cout << solution << endl;
 	return 0;
 }
